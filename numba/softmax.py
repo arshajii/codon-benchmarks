@@ -1,4 +1,6 @@
+# https://github.com/spcl/npbench/blob/main/npbench/benchmarks/deep_learning/softmax/softmax_numba_n.py
 import numpy as np
+import numba as nb
 import time
 
 def initialize(N, H, SM):
@@ -7,6 +9,7 @@ def initialize(N, H, SM):
     x = rng.random((N, H, SM, SM), dtype=np.float32)
     return x
 
+@nb.jit(nopython=True, parallel=False, fastmath=False)
 def softmax(x):
     new_shape = (x.shape[0], x.shape[1], x.shape[2], 1)
     # tmp_max = np.max(x, axis=-1, keepdims=True)
@@ -16,7 +19,8 @@ def softmax(x):
     tmp_out = np.exp(x - tmp_max)
     # tmp_sum = np.sum(tmp_out, axis=-1, keepdims=True)
     tmp_sum = np.reshape(np.sum(tmp_out, axis=-1), new_shape)
-    return tmp_out / tmp_sum
+    tmp_out /= tmp_sum
+    return tmp_out
 
 N = 64
 H = 16
